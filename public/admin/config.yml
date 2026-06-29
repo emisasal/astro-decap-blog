@@ -1,0 +1,29 @@
+# Decap CMS reads this file from /admin/config.yml
+# Docs: https://decapcms.org/docs/configuration-options/
+
+backend:
+  name: git-gateway
+  branch: main # Change to "master" if your repo uses that default branch
+
+# Enables local editing with `pnpm dev:cms` + `pnpm dev` (see SETUP.md)
+local_backend: true
+
+media_folder: "public/images/uploads"
+public_folder: "/images/uploads"
+
+collections:
+  - name: blog
+    label: Blog Posts
+    label_singular: Blog Post
+    folder: "src/content/blog"
+    create: true
+    slug: "{{slug}}"
+    extension: md
+    format: frontmatter
+    fields:
+      - { label: Title, name: title, widget: string }
+      - { label: Description, name: description, widget: string, hint: "Short summary shown on the blog listing" }
+      - { label: Publish Date, name: pubDate, widget: datetime }
+      - { label: Author, name: author, widget: string, default: "Site Admin" }
+      - { label: Draft, name: draft, widget: boolean, default: false, hint: "Draft posts are hidden from the public site" }
+      - { label: Body, name: body, widget: markdown }

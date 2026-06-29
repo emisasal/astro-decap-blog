@@ -1,0 +1,16 @@
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Required for Decap CMS admin SPA routing
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/index.html"
+  status = 200
+
+# Netlify Identity — required for private /admin access in production
+# Enable in Netlify dashboard: Site settings → Identity → Enable Identity
+# Then enable Git Gateway: Identity → Services → Git Gateway → Enable

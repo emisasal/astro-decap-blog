@@ -1,0 +1,32 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="About | Astro Decap Blog"
+  description="Learn about the Astro, Tailwind, Decap CMS, and Netlify stack used in this project."
+>
+  <section class="mx-auto max-w-3xl px-6 py-16">
+    <h1 class="text-4xl font-bold tracking-tight text-slate-900">About this project</h1>
+    <div class="mt-8 space-y-6 text-lg leading-relaxed text-slate-600">
+      <p>
+        This is a test project built to learn how to deploy a static site with a blog to Netlify,
+        and how to add blog entries directly on production using a headless CMS.
+      </p>
+      <h2 class="text-2xl font-semibold text-slate-900 pt-4">Tech stack</h2>
+      <ul class="list-disc space-y-2 pl-6">
+        <li><strong class="text-slate-800">Astro</strong> — fast static site generator with content collections</li>
+        <li><strong class="text-slate-800">Tailwind CSS</strong> — utility-first styling</li>
+        <li><strong class="text-slate-800">Decap CMS</strong> — Git-based CMS (formerly Netlify CMS) for the <code class="rounded bg-slate-100 px-1.5 py-0.5 text-sm">/admin</code> editor</li>
+        <li><strong class="text-slate-800">Netlify</strong> — hosting, Identity auth, Git Gateway, and form handling</li>
+        <li><strong class="text-slate-800">pnpm</strong> — fast, disk-efficient package manager</li>
+      </ul>
+      <h2 class="text-2xl font-semibold text-slate-900 pt-4">How publishing works</h2>
+      <p>
+        Blog posts are Markdown files stored in <code class="rounded bg-slate-100 px-1.5 py-0.5 text-sm">src/content/blog/</code>.
+        When you save a post in the CMS, Decap commits the file to your Git repo via Netlify Git Gateway.
+        Netlify detects the commit and rebuilds the site automatically.
+      </p>
+    </div>
+  </section>
+</BaseLayout>
