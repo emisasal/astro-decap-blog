@@ -100,8 +100,9 @@ Add scripts to `package.json`:
 astro-decap-blog/
 ├── public/
 │   ├── admin/
-│   │   ├── index.html      # Loads Decap CMS
-│   │   └── config.yml      # CMS collections & backend config
+│   │   └── index.html      # Loads Decap CMS
+│   └── cms/
+│       └── config.yml      # CMS collections & backend config
 │   └── images/uploads/     # Media uploaded from CMS
 ├── src/
 │   ├── content.config.ts   # Astro content collection schema (Astro 7)
@@ -129,7 +130,7 @@ astro-decap-blog/
 
 File: `src/content.config.ts`
 
-The schema **must match** the fields in `public/admin/config.yml`. Mismatches cause build errors.
+The schema **must match** the fields in `public/cms/config.yml`. Mismatches cause build errors.
 
 ```ts
 import { defineCollection } from "astro:content";
@@ -154,7 +155,13 @@ export const collections = { blog };
 
 ## 5. Configure Decap CMS
 
-File: `public/admin/config.yml`
+File: `public/cms/config.yml`
+
+The config lives **outside** `/admin/` so Netlify's `/admin/*` SPA redirect does not block it. It is linked from `public/admin/index.html`:
+
+```html
+<link href="/cms/config.yml" type="text/yaml" rel="cms-config-url" />
+```
 
 Key settings:
 
@@ -181,8 +188,14 @@ collections:
 File: `public/admin/index.html`
 
 ```html
+<link href="/cms/config.yml" type="text/yaml" rel="cms-config-url" />
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 ```
+
+Scripts must be at the **end of `<body>`** — placing `decap-cms.js` in `<head>` causes a white page (`appendChild` of null).
+
+Do **not** add `/admin` redirects in `astro.config.mjs` — Astro will generate an empty `/admin/index.html` that overrides the CMS on deploy.
 
 The `/admin` route is **not linked in the navbar** — it is private by obscurity plus Netlify Identity login.
 
@@ -357,7 +370,7 @@ Checklist for any new Astro + Decap + Netlify project:
 - [ ] Create Astro project with `pnpm create astro`
 - [ ] Add Tailwind with `pnpm astro add tailwind`
 - [ ] Define content collection schema in `src/content.config.ts`
-- [ ] Create matching Decap collection in `public/admin/config.yml`
+- [ ] Create matching Decap collection in `public/cms/config.yml`
 - [ ] Add `public/admin/index.html` with Decap script
 - [ ] Set `media_folder` and `public_folder` for uploads
 - [ ] Add `netlify.toml` with build command and `/admin/*` redirect
@@ -372,8 +385,8 @@ Checklist for any new Astro + Decap + Netlify project:
 
 | Goal | Change |
 |------|--------|
-| Different branch | Update `branch` in `config.yml` |
-| More collections | Add to `src/content.config.ts` + `config.yml` |
+| Different branch | Update `branch` in `public/cms/config.yml` |
+| More collections | Add to `src/content.config.ts` + `public/cms/config.yml` |
 | Custom domain | Netlify → Domain management |
 | Multiple authors | Add Identity roles (Decap supports `auth_scope`) |
 | Preview before publish | Use `draft: true` field |
@@ -386,7 +399,7 @@ Checklist for any new Astro + Decap + Netlify project:
 
 - Confirm Git Gateway is enabled
 - Confirm you are logged in via Netlify Identity
-- Check `branch` in `config.yml` matches your repo default branch
+- Check `branch` in `public/cms/config.yml` matches your repo default branch
 
 ### Posts save but site doesn't update
 
@@ -398,19 +411,22 @@ Checklist for any new Astro + Decap + Netlify project:
 
 Usually a schema mismatch. Example: missing `description` field. Fix the Markdown frontmatter or update `src/content.config.ts`.
 
-### /admin returns 404
+### /admin returns 404 or white page
 
-**On Netlify (production):** `/admin` should redirect to `/admin/` and load the CMS. If you get a 404:
+**White page + `appendChild` error in console:** The Decap script was running before `<body>` existed, or the wrong `index.html` was deployed. Ensure `public/admin/index.html` loads scripts at the **end of `<body>`** and redeploy.
+
+**Wrong page deployed (Astro scripts instead of Decap):** Remove any `/admin` redirects from `astro.config.mjs`. Astro must not generate its own `/admin/index.html` route.
+
+**`config.yml` 404:** Config must live at `public/cms/config.yml` (not inside `/admin/`) so Netlify redirects don't block it.
+
+**On Netlify (production):** After pushing fixes, run **Deploys → Trigger deploy → Clear cache and deploy site**.
 
 - Confirm the latest deploy succeeded (Netlify → Deploys)
-- Check that `public/admin/index.html` exists in your repo
+- Check that `public/admin/index.html` and `public/cms/config.yml` exist in your repo
 - Verify **Publish directory** is `dist` in Netlify site settings
-- Try https://YOUR-SITE.netlify.app/admin/ (with trailing slash)
+- Try https://YOUR-SITE.netlify.app/admin/index.html directly
 
-**Locally with `pnpm dev`:** Astro's dev server does not serve directory indexes the same way Netlify does. Use:
-
-- http://localhost:4321/admin (redirects via `astro.config.mjs`), or
-- http://localhost:4321/admin/index.html directly
+**Locally with `pnpm dev`:** Use http://localhost:4321/admin/index.html (Astro dev does not serve directory indexes).
 
 Also run the Decap local backend in a second terminal:
 
@@ -419,7 +435,7 @@ pnpm dev        # terminal 1
 pnpm dev:cms    # terminal 2
 ```
 
-Ensure `local_backend: true` is in `public/admin/config.yml`.
+Ensure `local_backend: true` is in `public/cms/config.yml`.
 
 ### pnpm not found on Netlify
 

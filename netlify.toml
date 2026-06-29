@@ -5,11 +5,12 @@
 [build.environment]
   NODE_VERSION = "22"
 
-# Required for Decap CMS admin SPA routing
+# Decap CMS SPA — only rewrite paths that are not static files (Netlify shadowing
+# serves /admin/index.html and /cms/config.yml directly when they exist in dist/)
 [[redirects]]
   from = "/admin"
-  to = "/admin/"
-  status = 301
+  to = "/admin/index.html"
+  status = 200
 
 [[redirects]]
   from = "/admin/*"

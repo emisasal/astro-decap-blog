@@ -5,7 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
     <title>Content Manager</title>
-    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+    <!-- Config lives outside /admin/ so Netlify SPA redirects don't block it -->
+    <link href="/cms/config.yml" type="text/yaml" rel="cms-config-url" />
   </head>
-  <body></body>
+  <body>
+    <!-- Required for Netlify Identity login on production -->
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <!-- Script must run after <body> exists (appendChild error if placed in <head>) -->
+    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  </body>
 </html>

@@ -1,4 +1,5 @@
-# Decap CMS reads this file from /admin/config.yml
+# Decap CMS configuration
+# Loaded via <link rel="cms-config-url"> in public/admin/index.html
 # Docs: https://decapcms.org/docs/configuration-options/
 
 backend:
