@@ -213,7 +213,7 @@ Terminal 2 — Decap local backend:
 pnpm dev:cms
 ```
 
-Open http://localhost:4321/admin — you can create/edit posts without Netlify Identity. Changes write directly to your local files in `src/content/blog/`.
+Open http://localhost:4321/admin (redirects to the CMS). If you still see a 404, use http://localhost:4321/admin/index.html directly.
 
 ### Option C — Netlify Dev (mirrors production)
 
@@ -398,16 +398,28 @@ Checklist for any new Astro + Decap + Netlify project:
 
 Usually a schema mismatch. Example: missing `description` field. Fix the Markdown frontmatter or update `src/content.config.ts`.
 
-### Local /admin doesn't work
+### /admin returns 404
 
-Run both servers:
+**On Netlify (production):** `/admin` should redirect to `/admin/` and load the CMS. If you get a 404:
+
+- Confirm the latest deploy succeeded (Netlify → Deploys)
+- Check that `public/admin/index.html` exists in your repo
+- Verify **Publish directory** is `dist` in Netlify site settings
+- Try https://YOUR-SITE.netlify.app/admin/ (with trailing slash)
+
+**Locally with `pnpm dev`:** Astro's dev server does not serve directory indexes the same way Netlify does. Use:
+
+- http://localhost:4321/admin (redirects via `astro.config.mjs`), or
+- http://localhost:4321/admin/index.html directly
+
+Also run the Decap local backend in a second terminal:
 
 ```bash
 pnpm dev        # terminal 1
 pnpm dev:cms    # terminal 2
 ```
 
-Ensure `local_backend: true` is in `config.yml`.
+Ensure `local_backend: true` is in `public/admin/config.yml`.
 
 ### pnpm not found on Netlify
 
