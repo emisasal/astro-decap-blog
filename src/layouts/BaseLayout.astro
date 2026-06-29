@@ -36,5 +36,18 @@ const { title, description = "A learning project: Astro + Tailwind + Decap CMS o
         Built with Astro, Tailwind CSS, and Decap CMS — deployed on Netlify.
       </div>
     </footer>
+    <!-- Required on all pages: invite links land on / with #invite_token=... -->
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <script is:inline>
+      if (window.netlifyIdentity) {
+        window.netlifyIdentity.on("init", (user) => {
+          if (!user) {
+            window.netlifyIdentity.on("login", () => {
+              window.location.href = "/admin/";
+            });
+          }
+        });
+      }
+    </script>
   </body>
 </html>

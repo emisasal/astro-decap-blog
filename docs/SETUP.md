@@ -312,13 +312,42 @@ This prevents random visitors from creating accounts.
 
 1. **Identity → Invite users**
 2. Enter your email → send invite
-3. Open the invite email → set a password
+3. Open the invite email → click **Accept the invite**
+
+**Important:** The invite link opens your site homepage with a token in the URL (e.g. `https://YOUR-SITE.netlify.app/#invite_token=...`). The Netlify Identity widget must be loaded on that page to show the **Set your password** form. This project includes the widget on every page via `BaseLayout.astro`.
+
+If you already clicked the invite and landed on the homepage with nothing happening, use one of these:
+
+**Option A — Workaround without redeploying**
+
+1. Open the invite email again and copy the full link
+2. Change the URL so `/admin/` comes before the `#`:
+
+   ```
+   https://YOUR-SITE.netlify.app/admin/#invite_token=...
+   ```
+
+3. Paste in your browser — the password form should appear
+
+**Option B — After deploying the layout fix**
+
+1. Netlify → **Identity → Invite users** → resend the invite
+2. Click the new link — you should see the password form on the homepage
+3. After setting your password, you are redirected to `/admin`
+
+### Step 9.3b — Verify Identity site URL
+
+1. Netlify → **Site configuration → Identity → Identity settings**
+2. Set **Site URL** to your exact production URL, e.g. `https://astro-decap-blog.netlify.app`
+3. Save
+
+If the Site URL is wrong, invite links redirect to the wrong place and signup fails silently.
 
 ### Step 9.4 — Test login
 
 1. Visit `https://YOUR-SITE.netlify.app/admin`
 2. Click **Login with Netlify Identity**
-3. Sign in with your invited account
+3. Sign in with the email and password you set during the invite
 4. You should see the **Blog Posts** collection
 
 > **Note:** The first deploy after enabling Git Gateway may require a redeploy. If `/admin` shows auth errors, trigger **Deploys → Trigger deploy → Clear cache and deploy site**.
@@ -394,6 +423,16 @@ Checklist for any new Astro + Decap + Netlify project:
 ---
 
 ## 13. Troubleshooting
+
+### Invite link goes to homepage, no password form
+
+Netlify invite emails link to your **homepage** with `#invite_token=...` in the URL. Without the Identity widget on that page, nothing visible happens.
+
+**Immediate fix:** Open the invite URL as `/admin/#invite_token=...` instead of `/#invite_token=...`.
+
+**Permanent fix:** The Identity widget is included in `BaseLayout.astro` so all pages handle invites. Redeploy, then **resend the invite** from Netlify → Identity → Invite users (old invite tokens may have expired).
+
+Also verify **Identity → Identity settings → Site URL** matches your live Netlify URL exactly.
 
 ### "Failed to load entry" in /admin
 
