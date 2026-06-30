@@ -392,6 +392,45 @@ The blog post template (`src/pages/blog/[...slug].astro`) reads `post.data.heroI
 
 **Inline images in the body** — Use the **Media** tab in Decap or insert images in the Markdown editor. Files go to `public/images/uploads/` and are referenced as `/images/uploads/filename.jpg` in the post body.
 
+### HTML in blog posts
+
+Posts use Decap's **Markdown** widget and are saved as `.md` files. Astro renders the body with `<Content />`, and **allows raw HTML embedded inside Markdown** by default. There is no separate HTML body field.
+
+**Example** — this works in the **Body** field:
+
+```markdown
+## My section
+
+<p class="text-center text-lg">Custom HTML inside a post.</p>
+
+<div style="background: #f1f5f9; padding: 1rem; border-radius: 0.5rem;">
+  A styled callout box
+</div>
+```
+
+**In the CMS editor**
+
+- Switch to **raw Markdown mode** (toolbar toggle) to paste HTML directly.
+- The visual/rich editor is meant for Markdown formatting; complex HTML is easier to manage in raw mode.
+- Decap saves the Markdown/HTML string as-is — it does not convert the whole post to HTML.
+
+**What is supported**
+
+| Feature | Supported? |
+|---------|------------|
+| Inline HTML (`<strong>`, `<span>`, `<a>`, etc.) | Yes |
+| Block HTML (`<div>`, `<table>`, `<iframe>`, embeds) | Yes |
+| Full HTML-only posts (no Markdown) | Not out of the box |
+| `<script>` tags in the body | Unreliable — avoid |
+| React/Astro components in posts | Not with `.md` — needs **MDX** + template changes |
+| Styling | Custom HTML does not inherit Tailwind `prose` styles automatically; add classes or CSS |
+
+**If you need more than embedded HTML**
+
+- **Separate HTML field** — add a `widget: text` or `widget: code` field in `public/cms/config.yml` and render it with `set:html` in `src/pages/blog/[...slug].astro`.
+- **MDX** — the content schema already accepts `.mdx` files, but Decap is currently configured with `extension: md` only.
+- **Custom Decap widget** — for a full HTML WYSIWYG editor (Decap has no built-in HTML body widget).
+
 ---
 
 ## 11. How the publishing flow works
@@ -434,6 +473,7 @@ Checklist for any new Astro + Decap + Netlify project:
 | Multiple authors | Add Identity roles (Decap supports `auth_scope`) |
 | Preview before publish | Use `draft: true` field |
 | Hero banner on posts | Add `heroImage` to schema + CMS; render in `src/pages/blog/[...slug].astro` |
+| HTML-heavy posts | Embed HTML in Markdown body (raw mode), or add a dedicated HTML field / switch to MDX |
 
 ---
 
