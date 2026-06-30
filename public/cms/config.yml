@@ -27,4 +27,5 @@ collections:
       - { label: Publish Date, name: pubDate, widget: datetime }
       - { label: Author, name: author, widget: string, default: "Site Admin" }
       - { label: Draft, name: draft, widget: boolean, default: false, hint: "Draft posts are hidden from the public site" }
+      - { label: Hero Image, name: heroImage, widget: image, required: false, hint: "Optional banner shown between the title and body" }
       - { label: Body, name: body, widget: markdown }

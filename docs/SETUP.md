@@ -145,6 +145,7 @@ const blog = defineCollection({
     pubDate: z.coerce.date(),
     author: z.string(),
     draft: z.boolean().optional().default(false),
+    heroImage: z.string().optional(),
   }),
 });
 
@@ -182,6 +183,7 @@ collections:
     fields:
       - { label: Title, name: title, widget: string }
       # ... must match Astro schema
+      - { label: Hero Image, name: heroImage, widget: image, required: false, hint: "Optional banner shown between the title and body" }
       - { label: Body, name: body, widget: markdown }
 ```
 
@@ -195,7 +197,7 @@ File: `public/admin/index.html`
 
 Scripts must be at the **end of `<body>`** — placing `decap-cms.js` in `<head>` causes a white page (`appendChild` of null).
 
-Do **not** add `/admin` redirects in `astro.config.mjs` — Astro will generate an empty `/admin/index.html` that overrides the CMS on deploy.
+Do **not** add Astro `/admin` page routes in `astro.config.mjs` — that generates an empty `/admin/index.html` that overrides the CMS on deploy. For local dev, this project uses a Vite plugin (`adminIndexRewrite` in `astro.config.mjs`) to serve `/admin` without creating a build route.
 
 The `/admin` route is **not linked in the navbar** — it is private by obscurity plus Netlify Identity login.
 
@@ -226,7 +228,7 @@ Terminal 2 — Decap local backend:
 pnpm dev:cms
 ```
 
-Open http://localhost:4321/admin (redirects to the CMS). If you still see a 404, use http://localhost:4321/admin/index.html directly.
+Open http://localhost:4321/admin. If you still see a 404, restart the dev server (`astro dev stop`, then `pnpm dev`) or use http://localhost:4321/admin/index.html directly.
 
 ### Option C — Netlify Dev (mirrors production)
 
@@ -365,6 +367,7 @@ Once logged in at `/admin`:
    - **Publish Date** — when the post was/will be published
    - **Author** — byline
    - **Draft** — check to hide from public site
+   - **Hero Image** — optional banner shown between the title and body (upload or pick from Media)
    - **Body** — Markdown content
 3. Click **Publish** (or **Save** for draft)
 
@@ -377,7 +380,56 @@ Once logged in at `/admin`:
 
 ### Upload images
 
-Use the **Media** tab in Decap or insert images in the Markdown editor. Files go to `public/images/uploads/` and are referenced as `/images/uploads/filename.jpg`.
+Blog posts support two ways to use images:
+
+**Hero image (title banner)** — Use the **Hero Image** field in the post editor. This is optional. When set, the site renders it full-width between the post header (title, description, author) and the Markdown body. The path is saved in frontmatter:
+
+```yaml
+heroImage: /images/uploads/my-banner.png
+```
+
+The blog post template (`src/pages/blog/[...slug].astro`) reads `post.data.heroImage` and renders an `<img>` when present.
+
+**Inline images in the body** — Use the **Media** tab in Decap or insert images in the Markdown editor. Files go to `public/images/uploads/` and are referenced as `/images/uploads/filename.jpg` in the post body.
+
+### HTML in blog posts
+
+Posts use Decap's **Markdown** widget and are saved as `.md` files. Astro renders the body with `<Content />`, and **allows raw HTML embedded inside Markdown** by default. There is no separate HTML body field.
+
+**Example** — this works in the **Body** field:
+
+```markdown
+## My section
+
+<p class="text-center text-lg">Custom HTML inside a post.</p>
+
+<div style="background: #f1f5f9; padding: 1rem; border-radius: 0.5rem;">
+  A styled callout box
+</div>
+```
+
+**In the CMS editor**
+
+- Switch to **raw Markdown mode** (toolbar toggle) to paste HTML directly.
+- The visual/rich editor is meant for Markdown formatting; complex HTML is easier to manage in raw mode.
+- Decap saves the Markdown/HTML string as-is — it does not convert the whole post to HTML.
+
+**What is supported**
+
+| Feature | Supported? |
+|---------|------------|
+| Inline HTML (`<strong>`, `<span>`, `<a>`, etc.) | Yes |
+| Block HTML (`<div>`, `<table>`, `<iframe>`, embeds) | Yes |
+| Full HTML-only posts (no Markdown) | Not out of the box |
+| `<script>` tags in the body | Unreliable — avoid |
+| React/Astro components in posts | Not with `.md` — needs **MDX** + template changes |
+| Styling | Custom HTML does not inherit Tailwind `prose` styles automatically; add classes or CSS |
+
+**If you need more than embedded HTML**
+
+- **Separate HTML field** — add a `widget: text` or `widget: code` field in `public/cms/config.yml` and render it with `set:html` in `src/pages/blog/[...slug].astro`.
+- **MDX** — the content schema already accepts `.mdx` files, but Decap is currently configured with `extension: md` only.
+- **Custom Decap widget** — for a full HTML WYSIWYG editor (Decap has no built-in HTML body widget).
 
 ---
 
@@ -402,6 +454,7 @@ Checklist for any new Astro + Decap + Netlify project:
 - [ ] Create matching Decap collection in `public/cms/config.yml`
 - [ ] Add `public/admin/index.html` with Decap script
 - [ ] Set `media_folder` and `public_folder` for uploads
+- [ ] Add optional `heroImage` field (schema, CMS config, and blog post template)
 - [ ] Add `netlify.toml` with build command and `/admin/*` redirect
 - [ ] Add `decap-server` dev dependency for local CMS testing
 - [ ] Push to Git provider connected to Netlify
@@ -419,6 +472,8 @@ Checklist for any new Astro + Decap + Netlify project:
 | Custom domain | Netlify → Domain management |
 | Multiple authors | Add Identity roles (Decap supports `auth_scope`) |
 | Preview before publish | Use `draft: true` field |
+| Hero banner on posts | Add `heroImage` to schema + CMS; render in `src/pages/blog/[...slug].astro` |
+| HTML-heavy posts | Embed HTML in Markdown body (raw mode), or add a dedicated HTML field / switch to MDX |
 
 ---
 
@@ -454,7 +509,7 @@ Usually a schema mismatch. Example: missing `description` field. Fix the Markdow
 
 **White page + `appendChild` error in console:** The Decap script was running before `<body>` existed, or the wrong `index.html` was deployed. Ensure `public/admin/index.html` loads scripts at the **end of `<body>`** and redeploy.
 
-**Wrong page deployed (Astro scripts instead of Decap):** Remove any `/admin` redirects from `astro.config.mjs`. Astro must not generate its own `/admin/index.html` route.
+**Wrong page deployed (Astro scripts instead of Decap):** Do not add Astro `/admin` page routes. Use the `adminIndexRewrite` Vite plugin for local dev only (see `astro.config.mjs`).
 
 **`config.yml` 404:** Config must live at `public/cms/config.yml` (not inside `/admin/`) so Netlify redirects don't block it.
 
@@ -465,7 +520,7 @@ Usually a schema mismatch. Example: missing `description` field. Fix the Markdow
 - Verify **Publish directory** is `dist` in Netlify site settings
 - Try https://YOUR-SITE.netlify.app/admin/index.html directly
 
-**Locally with `pnpm dev`:** Use http://localhost:4321/admin/index.html (Astro dev does not serve directory indexes).
+**Locally with `pnpm dev`:** `/admin` should work via the `adminIndexRewrite` plugin in `astro.config.mjs`. If it still 404s, restart the dev server or open http://localhost:4321/admin/index.html directly.
 
 Also run the Decap local backend in a second terminal:
 

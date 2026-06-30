@@ -31,6 +31,19 @@ const { Content } = await render(post);
       <p class="mt-4 text-sm text-slate-500">By {post.data.author}</p>
     </header>
 
+    {
+      post.data.heroImage && (
+        <figure class="mt-8">
+          <img
+            src={post.data.heroImage}
+            alt=""
+            class="w-full rounded-xl"
+            loading="eager"
+          />
+        </figure>
+      )
+    }
+
     <div class="prose prose-slate mt-10 max-w-none prose-headings:font-semibold prose-a:text-brand-600 prose-a:no-underline hover:prose-a:underline">
       <Content />
     </div>
